@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Learning App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .hidden { display: none; }
+        .fade-in { opacity: 0; transition: opacity 0.5s ease-in; }
+        .fade-in.show { opacity: 1; }
+        .scale-in {
+            transform: scale(0);
+            animation: scale-in 0.3s forwards;
+        }
+        @keyframes scale-in {
+            to {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <div class="max-w-3xl mx-auto p-4">
+        <!-- Navbar -->
+        <div class="flex items-center justify-between shadow bg-white p-4 rounded-lg">
+            <button id="backButton" class="text-blue-600 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+            <h1 id="navTitle" class="text-xl font-bold text-center flex-grow">Item List</h1>
+        </div>
+
+        <!-- Content Display Area -->
+        <div id="contentDisplay" class="hidden mt-4 space-y-4"></div>
+
+        <!-- Item List -->
+        <div id="itemList" class="mt-6 space-y-4"></div>
+    </div>
+
+    <script>
+    const backButton = document.getElementById("backButton");
+const navTitle = document.getElementById("navTitle");
+const itemList = document.getElementById("itemList");
+const contentDisplay = document.getElementById("contentDisplay");
+
+let currentView = "items";
+let currentSubItem = null;
+let currentSubItems = [];
+let currentItemTitle = "";
+
+const items = [
+    {
+    "id": "1",
+    "title": "Grammar (ব্যাকরণ)",
+    "subItems": [
+        {
+            "title": "What is Grammar?",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "Grammar হলো ভাষাকে শুদ্ধভাবে বোঝা, পড়া, বলা এবং লেখা শেখার নিয়ম-কানুন। এটি শব্দের গঠন, বাক্যের কাঠামো, উচ্চারণ, এবং ভাষার নিয়মাবলীকে সঠিকভাবে বুঝতে সহায়তা করে।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Importance",
+                    "paragraphs": "ইংরেজি শুদ্ধভাবে বলার, পড়ার ও লেখার জন্য ইংরেজি ব্যাকরণ জানাটা প্রয়োজন। ভাষা শেখা ও ব্যাকরণ শেখা দুইটা আলাদা বিষয়। ব্যাকরণ শেখার মাধ্যমে ভাষা ব্যবহারের শুদ্ধতা, যথার্থতা এবং স্পষ্টতা নিশ্চিত করা যায়।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Grammar Elements",
+            "content": [
+                {
+                    "title": "Phonology",
+                    "paragraphs": "এটি ভাষার ধ্বনি ও উচ্চারণের নিয়ম। Phonology শিখলে আমরা সঠিকভাবে শব্দের উচ্চারণ এবং ভাষার ধ্বনির সঠিক ব্যবহার জানতে পারি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Morphology",
+                    "paragraphs": "এটি শব্দের গঠন ও বিভিন্ন অংশ নিয়ে কাজ করে। Morphology এর মাধ্যমে আমরা শব্দের মূল, উপসর্গ, প্রত্যয় ইত্যাদির ব্যবহারের নিয়ম শিখি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Syntax",
+                    "paragraphs": "এটি বাক্যে শব্দের সঠিক সাজানোর নিয়ম। Syntax শেখার মাধ্যমে আমরা জানি কিভাবে সঠিকভাবে বাক্য গঠন করতে হয় যাতে তা ভাষার নিয়ম মেনে চলে।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Semantics",
+                    "paragraphs": "এটি শব্দের অর্থ ও তাদের সঠিক ব্যবহার শেখায়। Semantics ব্যাখ্যা করে কিভাবে শব্দের অর্থ প্রসঙ্গভেদে পরিবর্তিত হয় এবং শব্দগুলোর মধ্যে সম্পর্ক তৈরি হয়।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Pragmatics",
+                    "paragraphs": "এটি ভাষার ব্যবহারিক দিক ও প্রেক্ষাপট বুঝায়। Pragmatics শেখায় কিভাবে ভাষার অর্থ প্রসঙ্গ এবং পরিস্থিতির উপর নির্ভর করে পরিবর্তিত হয়।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Why Learn Grammar?",
+            "content": [
+                {
+                    "title": "Benefits",
+                    "paragraphs": "ব্যাকরণ শেখার কিছু গুরুত্বপূর্ণ কারণ:",
+                    "bullets": [
+                        "ভাষার নিজস্ব বৈশিষ্ট্য জানার জন্য।",
+                        "সঠিক বানান, উচ্চারণ ও শব্দের গঠন শেখার জন্য।",
+                        "শব্দের অর্থ এবং ব্যবহারের সঠিকতা বুঝতে এবং প্রয়োগে সাহায্য করে।",
+                        "বাক্যের সঠিক গঠন এবং অর্থ সঠিকভাবে বোঝার জন্য।",
+                        "ভাষার মাধ্যমে প্রভাব সৃষ্টি করার দক্ষতা উন্নত করতে।",
+                        "ভাষার নিয়মগুলি শিখলে এটি যোগাযোগের ক্ষেত্রে স্পষ্টতা এবং প্রজ্ঞা যোগ করে।"
+                    ],
+                    "completed": false
+                }
+            ]
+        }
+    ]
+},
+
+
+{
+    "id": "2",
+    "title": "Letter & Alphabet",
+    "subItems": [
+        {
+            "title": "Introduction",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "ইংরেজি ভাষাকে লিখে প্রকাশ করার জন্য কতকগুলি চিহ্ন বা সংকেতের প্রয়োজন হয়। এই সাংকেতিক চিহ্নগুলিকে এক একটি Letter বা বর্ণ বা অক্ষর বলে। ইংরেজি ভাষায় মোট ২৬ টি Letter বা বর্ণ আছে। এদের সমষ্টিকে Alphabet বা বর্ণমালা বলে। প্রতিটি বর্ণ বা অক্ষরকে আলাদাভাবে ‘Letter’ বলা হয়, আর সবগুলো Letter একত্রে ‘Alphabet’ বলা হয়।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Capital and Small Letters",
+            "content": [
+                {
+                    "title": "Capital Letter (Upper Case)",
+                    "paragraphs": "Capital Letter বা Upper Case (বড় হাতের অক্ষর) হলো A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Small Letter (Lower Case)",
+                    "paragraphs": "Small Letter বা Lower Case (ছোট হাতের অক্ষর) হলো a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Dividing the Letters",
+            "content": [
+                {
+                    "title": "Vowel (স্বরবর্ণ)",
+                    "paragraphs": "ইংরেজী বর্ণমালার ২৬ টি বর্ণের মধ্যে a, e, i, o, u এই পাঁচটিকে Vowel বা স্বরবর্ণ বলা হয়। Vowel হচ্ছে এমন কিছু ধ্বনি যা অন্যের সাহায্য ছাড়াই নিজে নিজে বা অন্য Vowel এর সাহায্য নিয়ে উচ্চারিত হয়। Vowel কোন Consonant এর সাহায্য ছাড়াই উচ্চারিত হয়। Vowel বা Semi-Vowel ছাড়া কোনো Word গঠিত হয় না।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Semi-Vowel (অর্ধ-স্বরবর্ণ)",
+                    "paragraphs": "যে Letter এর উচ্চারণ প্রায়ই Vowel এর কাছাকাছি, তাকে Semi-Vowel বলা হয়। w, y কে Semi-Vowel বলা হয়, তাদের উচ্চারণ Vowel এর কাছাকাছি হলেও তারা মূলত Consonant এর অন্তর্ভুক্ত।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Consonant (ব্যঞ্জনবর্ণ)",
+                    "paragraphs": "ইংরেজী বর্ণমালার ২৬ টি বর্ণের মধ্যে ৫ টি Vowel ব্যতীত বাকী ২১ (একুশ) টি বর্ণকে Consonant বা ব্যঞ্জনবর্ণ বলা হয়। Consonant এর উচ্চারণ Vowel ছাড়া সম্ভব নয়।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        }
+    ]
+},
+
+
+{
+    "id": "3",
+    "title": "Word",
+    "subItems": [
+        {
+            "title": "Definition",
+            "content": [
+                {
+                    "title": "What is a Word?",
+                    "paragraphs": "এক বা একাধিক Letter বা বর্ণ একত্রিত হয়ে যখন সম্পূর্ণ অর্থ প্রকাশ করে, তখন তাকে Word বা শব্দ বলা হয়। যেমন: Apple, Mango, Pen, Book ইত্যাদি। যদি অর্থ প্রকাশ করে তাহলে একটি Letter বা বর্ণও একটি Word হতে পারে, যেমন ‘A’ ও ‘I’। তবে B, C কোন Word নয়, কারণ এগুলো দ্বারা কোন অর্থ প্রকাশ পায় না।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Word as a Complete Unit",
+                    "paragraphs": "David Crystal বলেছেন, 'A word is the smallest unit of grammar that can stand alone as a complete utterance, separated by spaces in written language.'",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Incomplete Words",
+            "content": [
+                {
+                    "title": "Non-words",
+                    "paragraphs": "একাধিক Letter পাশাপাশি বসে যদি কোন অর্থ প্রকাশ না করে, তাহলে তা word হিসেবে বিবেচিত হবে না। যেমন- Drow, Nep, Eplpa ইত্যাদি। এগুলো যদিও দেখতে word এর মত, তবে এগুলোর কোন অর্থ নেই এবং এরা word নয়। কিন্তু যদি এগুলোর অগোছালো Letter গুলোকে সাজানো যায়, তবে তারা Word হয়ে উঠবে, যেমন Drow -> Word (শব্দ), Nep -> Pen (কলম), Eplpa -> Apple (আপেল)।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Qualities of a Word",
+            "content": [
+                {
+                    "title": "Meaningful Words",
+                    "paragraphs": "একটা পরিপূর্ণ অর্থবোধক শব্দ হওয়ার জন্য কিছু নিয়ম অনুসরণ করতে হয়। যেমন- অধিকাংশ শব্দ, যেমন I, you, he ইত্যাদি, আলাদা অর্থ বহন করে। যদি কোন শব্দের অর্থ না থাকে, যেমন ‘halalization’, তা word হিসেবে গণ্য হবে না।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Root Word",
+                    "paragraphs": "প্রত্যেকটা শব্দের একটি root বা মূল শব্দ থাকে, যা থেকে অনেক নতুন শব্দ তৈরি হয়। উদাহরণস্বরূপ, 'happy' একটি root শব্দ এবং এর সাথে ‘un’ যোগ করলে ‘unhappy’ শব্দটি তৈরি হয়। যদি root শব্দটি ভেঙে ফেলা হয়, তবে সেটা আর একটি অর্থবোধক শব্দ হিসেবে ব্যবহৃত হবে না।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Spacing in Words",
+                    "paragraphs": "যখন দুটি শব্দ একত্রে উচ্চারণ করা হয়, তখন তাদের মাঝে একটু থামতে হয় এবং লেখার সময় সঠিক জায়গায় সঠিকভাবে space দিতে হয়। উদাহরণস্বরূপ, 'sky' এবং 'blue' দুটি শব্দ। আমরা যদি এগুলো উচ্চারণ করতে চাই, তাহলে প্রত্যেকটি শব্দের পর একটু থামতে হবে এবং লিখতে গেলে তাদের মাঝে একটি space দিতে হবে, যেমন 'sky blue'। যদি 'skyblue' লেখা হয়, তা ভুল হবে।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        }
+    ]
+},
+
+{
+    "id": "4",
+    "title": "Syllables and English Spelling",
+    "subItems": [
+        {
+            "title": "Syllable",
+            "content": [
+                {
+                    "title": "What is a Syllable?",
+                    "paragraphs": "একটি Word এর যতটুকু অংশ একবারে উচ্চারণ করা যায়, ততটুকু অংশকে এক একটি Syllable বা শব্দাংশ বলে। সহজে বলতে গেলে উচ্চারণ অনুসারে শব্দের ক্ষুদ্ৰতম অংশকেই Syllable বলে৷ প্রতিটি Syllable এ অবশ্যই একটি Vowel থাকবে আবার শুধুমাত্র এক বা একাধিক Vowel দিয়েও একটি Syllable হতে পারে। যেমন:\nPen, Door, Tongue, School, Sister = Sis+ter, Grammar = Grammar, Therapy = Thet+rat+py, Impossible = Im+potssitble, Pronunciation = Protnun+cita+tion.",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Types of Syllables",
+                    "paragraphs": "Syllable ৮ প্রকার। যথা:",
+                    "bullets": [
+                        "Mono Syllable (একস্বরা-শব্দাংশ)",
+                        "Di Syllable (যুগল-শব্দাংশ)",
+                        "Tri Syllable (ত্ৰি-শব্দাংশ)",
+                        "Poly Syllable (বহু-শব্দাংশ)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Mono Syllable",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Word এ একটিমাত্র syllable থাকে তাকে Monosyllable বলে। যেমন: Pot, Mat, Rat, Cat, Bat, Cup, Top, Dog ইত্যাদি।",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Di Syllable",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Word এ দুইটি Syllable থাকে তাকে Di Syllable বলে। Di অর্থ দুই। উদাহরণ: Mother = Mo-ther, Brother = Bro-ther, Baby = Batby, Doctor = Docttor, Teacher = Teatcher, Pencil = Pentcil, Basket = Bastket, Friday = Fritday.",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Tri Syllable",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Word এ তিনটি Syllable থাকে তাকে Tri Syllable বলে। Tri অর্থ তিনটি। উদাহরণ: September = Sep-tem-ber, Yesterday = Yest-ter-day, Beautiful = Beau-ti-ful, Umbrella = Um-brel-la, Company = Com-pa-ny, Memory = Me-mo-ry, Medicine = Med-i-cine, Newspaper = News-pa-per, Therapy = The-ra-py.",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Poly Syllable",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Word এ তিনটির বেশী Syllable থাকে তাকে Poly Syllable বলে। Poly অর্থ বহু। উদাহরণ: Examination = Ex-am-in-a-tion, Reciprocal = Re-ci-pro-cal, Comparative = Com-pa-ra-tive, University = U-ni-ver-si-ty, Satisfaction = Sat-is-fac-tion, Television = Te-le-vi-sion, Helicopter = He-li-cop-ter, Congratulation = Con-gra-tu-la-tion, Responsibility = Re-spon-si-bi-li-ty.",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "English Spelling Rules",
+            "content": [
+                {
+                    "title": "Rule 1: L-ending Words",
+                    "paragraphs": "‘L’ (এল) দ্বারা গঠিত এক syllable বিশিষ্ট শব্দে যদি ‘]’ এর পূৰ্বে একটিমাত্র vowel থাকে, তাহলেএ শব্দের শেষে ‘1!’ ব্যবহার করতে হয়। যেমন: Well, Tell, Fill, Till.",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Rule 2: Double Vowels Before L",
+                    "paragraphs": "‘L’ (এল) দ্বারা সমাপ্ত এক syllable বিশিষ্ট শব্দে যদি T এর পূর্বে দুটি vowel থাকে, তাহলে এ শব্দের শেষে একটি ‘]’ ব্যবহার করতে হয়। যেমন: Feel, Weal, Meal, Goal.",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Rule 3: Suffix with Consonants",
+                    "paragraphs": "Consonant যুক্ত কোনো suffix (ness ব্যতীত) যদি ‘]’ দ্বারা সমাপ্ত হয়, তাহলে শব্দের শেষে ‘]’ বাদ যাবে। যেমন: Welcome, Welfare, Fulfil.",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Rule 4: ll-ending Words",
+                    "paragraphs": "‘ll’ দ্বারা সমাপ্ত এক syllable বিশিষ্ট শব্দ যদি suffix হিসেবে ব্যবহৃত হয়, তাহলে শেষের ‘]’ বাদ দিতে হবে। যেমন: Roll-enrol, Fill-fulfil, Full-doubtful.",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Rule 5: Double Consonants with Suffixes",
+                    "paragraphs": "কোনো শব্দের শেষে যদি consonant থাকে এবং consonant এর পূর্বে vowel থাকে এবং এরপরে vowel বিশিষ্ট কোনো suffix যুক্ত হয়, তাহলে শেষের consonant টি double হবে। যেমন: Cancel-ed = Cancelled, Travel-er = Traveller.",
+                    "bullets": [],
+                    "completed": false
+                }
+            ]
+        }
+    ]
+},
+
+{
+    "id": "5",
+    "title": "Number",
+    "subItems": [
+        {
+            "title": "What is Number?",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "Number শব্দের অর্থ হলো বচন বা সংখ্যার ধারণা। সাধারণ ভাষায়, Number হলো সেই Countable Noun দিয়ে যে কোন কিছুর সংখ্যা নির্ধারণ করা যায়।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Types of Number",
+                    "paragraphs": "Number দুই প্রকার, যেমন:",
+                    "bullets": [
+                        "Singular Number (এক বচন)",
+                        "Plural Number (বহু বচন)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Singular Number (এক বচন)",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Noun দ্বারা কেবল একজন ব্যক্তি, একটি বস্তু কিংবা একটি প্রাণীকে বোঝায় তাকে Singular Number বলে। উদাহরণ: Key, Book ইত্যাদি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Examples",
+                    "paragraphs": "Examples of Singular Number:",
+                    "bullets": [
+                        "I have a key. (আমার একটি চাবি আছে)",
+                        "They gave me a book. (তারা আমাকে একটি বই দিয়েছিলো)",
+                        "I had a phone. (আমার একটি ফোন ছিল)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Plural Number (বহু বচন)",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Noun দ্বারা একের অধিক ব্যক্তি, বস্তু কিংবা প্রাণীকে বোঝায় তাকে Plural Number বলে। উদাহরণ: Pens, Books ইত্যাদি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Examples",
+                    "paragraphs": "Examples of Plural Number:",
+                    "bullets": [
+                        "I have many pens. (আমার অনেকগুলো কলম আছে)",
+                        "They have many books. (তাদের অনেক বই আছে)",
+                        "There are some tables in the room. (রুমে কিছু টেবিল আছে)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Singular to Plural Rules",
+            "content": [
+                {
+                    "title": "General Rule",
+                    "paragraphs": "সাধারণত Singular Noun এর শেষে 's' যোগ করে Plural করতে হয়। উদাহরণ: ",
+                    "bullets": [
+                        "Book → Books",
+                        "Pen → Pens"
+                    ],
+                    "completed": false
+                },
+                {
+                    "title": "Special Rules",
+                    "paragraphs": "কিছু বিশেষ নিয়ম আছে যেগুলির মাধ্যমে Singular Noun থেকে Plural করা হয়:",
+                    "bullets": [
+                        "যদি Noun এর শেষে 's', 'x', 'ch', 'sh', 'z' থাকে, তবে 'es' যোগ করতে হয়। উদাহরণ:",
+                        "Box → Boxes",
+                        "Dish → Dishes",
+                        "Glass → Glasses",
+                        "Bus → Buses",
+                        "Match → Matches",
+                        "Church → Churches",
+                        "Class → Classes"
+                    ],
+                    "completed": false
+                },
+                {
+                    "title": "Changing 'y' to 'ies'",
+                    "paragraphs": "যখন Singular Noun এর শেষে 'y' থাকে এবং তার আগের অক্ষর স্বরবর্ণ না হয়ে ব্যঞ্জনবর্ণ হয়, তখন 'y' কে 'ies' দিয়ে প্রতিস্থাপন করতে হয়। উদাহরণ:",
+                    "bullets": [
+                        "Baby → Babies",
+                        "City → Cities",
+                        "Party → Parties"
+                    ],
+                    "completed": false
+                },
+                {
+                    "title": "Changing 'f' to 'ves'",
+                    "paragraphs": "যখন Singular Noun এর শেষে 'f' বা 'fe' থাকে, তখন 'f' বা 'fe' কে 'ves' দিয়ে প্রতিস্থাপন করতে হয়। উদাহরণ:",
+                    "bullets": [
+                        "Leaf → Leaves",
+                        "Knife → Knives",
+                        "Wolf → Wolves"
+                    ],
+                    "completed": false
+                }
+            ]
+        }
+    ]
+},
+
+{
+    "id": "6",
+    "title": "Gender",
+    "subItems": [
+        {
+            "title": "What is Gender?",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "Gender শব্দের অর্থ হলো একটি নাম বা Noun এর পুরুষ বা মহিলা জাত বা লিঙ্গ। সাধারণত, Gender বলতে একটি Noun এর লিঙ্গ নির্দেশ করার ধারণা বোঝায়।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Types of Gender",
+                    "paragraphs": "Gender চার প্রকার, যেমন:",
+                    "bullets": [
+                        "Masculine Gender (পুংলিঙ্গ)",
+                        "Feminine Gender (স্ত্রীলিঙ্গ)",
+                        "Common Gender (সাধারণ লিঙ্গ)",
+                        "Neuter Gender (নির্বোধ লিঙ্গ)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Masculine Gender (পুংলিঙ্গ)",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Noun দ্বারা পুরুষ জাতের ব্যক্তি, প্রাণী বা বস্তু বোঝানো হয় তাকে Masculine Gender বা পুংলিঙ্গ বলে। উদাহরণ: Boy, Man, King ইত্যাদি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Examples",
+                    "paragraphs": "Examples of Masculine Gender:",
+                    "bullets": [
+                        "The boy is playing. (ছেলেটি খেলে চলেছে)",
+                        "The man is working. (পুরুষটি কাজ করছে)",
+                        "The lion is roaring. (সিংহটি হাঁকার দিচ্ছে)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Feminine Gender (স্ত্রীলিঙ্গ)",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Noun দ্বারা নারী জাতের ব্যক্তি, প্রাণী বা বস্তু বোঝানো হয় তাকে Feminine Gender বা স্ত্রীলিঙ্গ বলে। উদাহরণ: Girl, Woman, Queen ইত্যাদি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Examples",
+                    "paragraphs": "Examples of Feminine Gender:",
+                    "bullets": [
+                        "The girl is reading. (মেয়েটি পড়ছে)",
+                        "The woman is cooking. (মহিলাটি রান্না করছে)",
+                        "The cow is grazing. (গরুটির চারণ করছে)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Common Gender (সাধারণ লিঙ্গ)",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Noun দ্বারা পুরুষ বা মহিলা উভয়ের জন্যই ব্যবহার করা যায় তাকে Common Gender বলে। উদাহরণ: Teacher, Parent, Student ইত্যাদি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Examples",
+                    "paragraphs": "Examples of Common Gender:",
+                    "bullets": [
+                        "The teacher is teaching. (শিক্ষক পাঠদান করছেন)",
+                        "The parent is concerned about the child. (অভিভাবক শিশুর বিষয়ে চিন্তিত)",
+                        "The student is studying. (ছাত্রটি পড়ছে)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Neuter Gender (নির্বোধ লিঙ্গ)",
+            "content": [
+                {
+                    "title": "Definition",
+                    "paragraphs": "যে Noun দ্বারা কোন জীবন্ত প্রাণী বা পুরুষ বা মহিলার কোনো একটিও প্রতিনিধিত্ব না করা হয় তাকে Neuter Gender বা নির্বোধ লিঙ্গ বলে। উদাহরণ: Table, Chair, Pen ইত্যাদি।",
+                    "bullets": [],
+                    "completed": false
+                },
+                {
+                    "title": "Examples",
+                    "paragraphs": "Examples of Neuter Gender:",
+                    "bullets": [
+                        "The table is round. (টেবিলটি বৃত্তাকার)",
+                        "The chair is comfortable. (চেয়ারটি আরামদায়ক)",
+                        "The pen is on the desk. (কলমটি টেবিলের উপর)"
+                    ],
+                    "completed": false
+                }
+            ]
+        },
+        {
+            "title": "Changing Gender",
+            "content": [
+                {
+                    "title": "Masculine to Feminine",
+                    "paragraphs": "কিছু Noun এর Masculine Gender থেকে Feminine Gender পরিবর্তন করা যায়। নিচে কিছু উদাহরণ:",
+                    "bullets": [
+                        "Actor → Actress",
+                        "Boy → Girl",
+                        "Father → Mother",
+                        "King → Queen",
+                        "Man → Woman"
+                    ],
+                    "completed": false
+                },
+                {
+                    "title": "Feminine to Masculine",
+                    "paragraphs": "কিছু Noun এর Feminine Gender থেকে Masculine Gender পরিবর্তন করা যায়। নিচে কিছু উদাহরণ:",
+                    "bullets": [
+                        "Queen → King",
+                        "Mother → Father",
+                        "Wife → Husband"
+                    ],
+                    "completed": false
+                }
+            ]
+        }
+    ]
+},
+
+
+
+
+
+];
+
+// Load saved progress from local storage
+function loadProgress() {
+    const savedProgress = JSON.parse(localStorage.getItem('grammarAppProgress')) || {};
+    items.forEach(item => {
+        item.subItems.forEach(subItem => {
+            subItem.content.forEach(content => {
+                const key = `${item.id}-${subItem.title}-${content.title}`;
+                if (savedProgress[key]) {
+                    content.completed = savedProgress[key];
+                }
+            });
+        });
+    });
+}
+
+// Save progress to local storage
+function saveProgress() {
+    const progressToSave = {};
+    items.forEach(item => {
+        item.subItems.forEach(subItem => {
+            subItem.content.forEach(content => {
+                const key = `${item.id}-${subItem.title}-${content.title}`;
+                progressToSave[key] = content.completed;
+            });
+        });
+    });
+    localStorage.setItem('grammarAppProgress', JSON.stringify(progressToSave));
+}
+
+// Initialize app
+loadProgress();
+renderItems(items);
+
+function renderItems(items) {
+    itemList.innerHTML = "";
+    currentView = "items";
+    navTitle.textContent = "Item List"; 
+    backButton.classList.add("hidden");
+    contentDisplay.classList.add("hidden");
+
+    items.forEach(item => {
+        const completedContentCount = item.subItems.flatMap(subItem => subItem.content).filter(content => content.completed).length;
+        const totalContentCount = item.subItems.flatMap(subItem => subItem.content).length;
+        const progressPercentage = Math.round((completedContentCount / totalContentCount) * 100) || 0;
+
+        const itemDiv = document.createElement("div");
+        itemDiv.classList.add("flex", "items-center", "justify-between", "p-4", "border", "rounded-lg", "bg-white", "shadow-md", "hover:shadow-lg", "cursor-pointer", "fade-in");
+
+        const progressCircle = document.createElement("div");
+        progressCircle.classList.add("flex", "items-center", "justify-center", "w-10", "h-10", "rounded-full", "bg-gray-200", "text-indigo-600", "font-bold");
+        
+        if (progressPercentage === 100) {
+            progressCircle.innerHTML = `
+                <div class="flex items-center justify-center w-8 h-8 bg-green-600 rounded-full scale-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l5 5L20 7" />
+                    </svg>
+                </div>
+            `;
+        } else {
+            progressCircle.textContent = `${progressPercentage}%`;
+        }
+
+        const title = document.createElement("div");
+        title.classList.add("flex-grow", "ml-4", "font-semibold", "text-lg", "text-gray-800");
+        title.textContent = item.title;
+
+        const arrow = document.createElement("div");
+        arrow.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7" />
+            </svg>
+        `;
+
+        itemDiv.appendChild(progressCircle);
+        itemDiv.appendChild(title);
+        itemDiv.appendChild(arrow);
+        itemList.appendChild(itemDiv);
+
+        itemDiv.addEventListener("click", () => {
+            currentItemTitle = item.title; 
+            renderSubItems(item.subItems);
+        });
+    });
+
+    setTimeout(() => {
+        itemList.querySelectorAll('.fade-in').forEach(el => el.classList.add('show'));
+    }, 10);
+}
+
+function renderSubItems(subItems) {
+    itemList.innerHTML = "";
+    currentView = "subItems";
+    navTitle.textContent = currentItemTitle; 
+    currentSubItems = subItems; 
+    backButton.classList.remove("hidden");
+    contentDisplay.classList.add("hidden");
+
+    subItems.forEach((subItem, index) => {
+        const subItemDiv = document.createElement("div");
+        subItemDiv.classList.add("flex", "items-center", "justify-between", "p-4", "border", "rounded-lg", "bg-gray-100", "shadow-md", "cursor-pointer", "fade-in");
+
+        const numberCircle = document.createElement("div");
+        numberCircle.classList.add("flex", "items-center", "justify-center", "w-8", "h-8", "rounded-full", "bg-green-500", "text-white", "font-bold");
+        numberCircle.textContent = index + 1;
+
+        const title = document.createElement("div");
+        title.classList.add("flex-grow", "ml-4", "text-lg", "font-medium");
+        title.textContent = subItem.title;
+
+        const arrow = document.createElement("div");
+        arrow.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7" />
+            </svg>
+        `;
+
+        subItemDiv.appendChild(numberCircle);
+        subItemDiv.appendChild(title);
+        subItemDiv.appendChild(arrow);
+        itemList.appendChild(subItemDiv);
+
+        subItemDiv.addEventListener("click", () => {
+            currentSubItem = subItem;
+            showContent(subItem.content);
+        });
+    });
+
+    setTimeout(() => {
+        itemList.querySelectorAll('.fade-in').forEach(el => el.classList.add('show'));
+    }, 10);
+}
+
+function showContent(contentArray) {
+    currentView = "content";
+    itemList.innerHTML = "";
+    navTitle.textContent = currentSubItem.title; 
+    contentDisplay.classList.remove("hidden");
+    contentDisplay.innerHTML = renderStyledContent(contentArray);
+    backButton.classList.remove("hidden");
+}
+
+function renderStyledContent(contentArray) {
+    let htmlContent = '<div class="space-y-6">';
+
+    contentArray.forEach((item, index) => {
+        htmlContent += `
+            <div class="border rounded-lg p-6 bg-white shadow">
+                <h2 class="text-xl font-bold">${item.title}</h2>
+                <p class="text-gray-700">${item.paragraphs}</p>
+                <ul class="list-disc pl-6 text-gray-600">
+                    ${item.bullets.map(bullet => `<li>${bullet}</li>`).join('')}
+                </ul>
+                <label class="flex items-center mt-4">
+                    <input type="checkbox" class="mr-2" onchange="updateProgress(this, ${index})" ${item.completed ? 'checked' : ''}>
+                    Mark as Complete
+                </label>
+            </div>
+        `;
+    });
+
+    htmlContent += '</div>';
+    return htmlContent;
+}
+
+function updateProgress(checkbox, contentIndex) {
+    currentSubItem.content[contentIndex].completed = checkbox.checked;
+    saveProgress(); // Save progress on checkbox change
+
+    const completedCount = currentSubItem.content.filter(content => content.completed).length;
+    const totalCount = currentSubItem.content.length;
+    const progressPercentage = Math.round((completedCount / totalCount) * 100) || 0;
+    
+    const itemDiv = itemList.children[0]; // Reference the progress circle of the first item
+    itemDiv.querySelector('div').textContent = `${progressPercentage}%`; // Update percentage
+
+    if (progressPercentage === 100) {
+        itemDiv.querySelector('div').innerHTML = `
+            <div class="flex items-center justify-center w-8 h-8 bg-green-600 rounded-full scale-in">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l5 5L20 7" />
+                </svg>
+            </div>
+        `;
+    }
+}
+
+backButton.addEventListener("click", () => {
+    if (currentView === "subItems") {
+        renderItems(items);
+    } else if (currentView === "content") {
+        renderSubItems(currentSubItems);
+    }
+});
+
+    </script>
+</body>
+</html>
